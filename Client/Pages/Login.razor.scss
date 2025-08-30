@@ -1,0 +1,71 @@
+:root {
+    --bg: #0b0f14;
+    --bg-2: #0f1620;
+    --card: #101924;
+    --text: #eef1f5;
+    --muted: #9aa4b2;
+    --accent: #ffffff;
+    --danger: #e5484d;
+    --ring: #2b96ff;
+}
+
+.brv-auth {
+    min-height: 100dvh;
+    background: radial-gradient(1200px 700px at 50% -200px, #151e2b 0%, var(--bg) 55%), var(--bg);
+    color: var(--text);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 28px 20px;
+
+    .brand {
+        text-align: center;
+        font-weight: 900;
+        letter-spacing: .18rem;
+        font-size: 28px;
+        color: var(--accent);
+    }
+
+    .card {
+        margin: 28px auto 0;
+        width: 100%;
+        max-width: 380px;
+        background: linear-gradient(180deg, var(--card), var(--bg-2));
+        border: 1px solid rgba(255, 255, 255, .06);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+
+        .field {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 16px;
+
+            label {
+                font-size: 12px;
+                color: var(--muted);
+            }
+
+            input {
+                width: 100%;
+                background: #0d1520;
+                color: var(--text);
+                border: 1px solid rgba(255, 255, 255, .08);
+                border-radius: 12px;
+                padding: 14px;
+                outline: none;
+
+                &:focus {
+                    border-color: rgba(43, 150, 255, .6);
+                    box-shadow: 0 0 0 4px rgba(43, 150, 255, .15);
+                }
+            }
+        }
+    }
+
+    .footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 22px;
+    }
+}

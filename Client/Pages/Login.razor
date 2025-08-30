@@ -1,0 +1,77 @@
+﻿@page "/login"
+@using BravusApp.Client.Services
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthService Auth
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@attribute [AllowAnonymous]
+
+<div class="brv-auth">
+    <div class="brand">BRAVUS</div>
+
+    <EditForm Model="_model" OnValidSubmit="HandleLogin" class="card">
+        <DataAnnotationsValidator />
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="alert">@_error</div>
+        }
+
+        <div class="field">
+            <label for="email">E-mail</label>
+            <InputText id="email" @bind-Value="_model.Email" inputmode="email" autocomplete="email" />
+            <ValidationMessage For="@(() => _model.Email)" />
+        </div>
+
+        <div class="field">
+            <label for="password">Senha</label>
+            <div class="password">
+                <InputText id="password" type="@(_showPwd ? "text" : "password")"
+                           @bind-Value="_model.Password" autocomplete="current-password" />
+                <button type="button" class="toggle" @onclick="() => _showPwd = !_showPwd">
+                    @_showPwd ? "Ocultar" : "Mostrar"
+                </button>
+            </div>
+            <ValidationMessage For="@(() => _model.Password)" />
+        </div>
+
+        <div class="row">
+            <label class="check">
+                <InputCheckbox @bind-Value="_model.Remember" />
+                <span>Lembrar de mim</span>
+            </label>
+            <a class="link" href="/forgot">Esqueci a senha</a>
+        </div>
+
+        <button class="primary" disabled="@_loading" type="submit">
+            @(_loading ? "Entrando..." : "Entrar")
+        </button>
+    </EditForm>
+
+    <div class="footer">© @DateTime.UtcNow.Year Bravus</div>
+</div>
+
+@code {
+    readonly LoginVM _model = new();
+    bool _showPwd;
+    bool _loading;
+    string? _error;
+
+    async Task HandleLogin()
+    {
+        _loading = true;
+        _error = null;
+        var ok = await Auth.LoginAsync(_model.Email, _model.Password, _model.Remember);
+        _loading = false;
+        if (ok) Nav.NavigateTo("/");
+        else _error = "Credenciais inválidas.";
+    }
+
+    sealed class LoginVM
+    {
+        [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.EmailAddress]
+        public string Email { get; set; } = "";
+        [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.MinLength(6)]
+        public string Password { get; set; } = "";
+        public bool Remember { get; set; } = true;
+    }
+}

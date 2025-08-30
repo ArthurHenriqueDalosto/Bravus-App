@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Server\\BravusApp.Server.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Client\\BravusApp.Client.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

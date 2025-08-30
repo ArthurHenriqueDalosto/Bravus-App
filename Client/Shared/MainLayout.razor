@@ -1,0 +1,31 @@
+﻿@inherits LayoutComponentBase
+
+<div class="brv-shell">
+    <header class="topbar">
+        <a href="/" class="brand">BRAVUS</a>
+
+        <button class="burger" @onclick="ToggleMenu" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav class="menu" data-open="@_menuOpen">
+            <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+            <NavLink href="/relatorios">Relatórios</NavLink>
+            <NavLink href="/config">Configurações</NavLink>
+            <a href="/logout">Sair</a>
+        </nav>
+    </header>
+
+    <main class="content">
+        @Body
+    </main>
+
+    <footer class="foot">
+        © @DateTime.UtcNow.Year Bravus
+    </footer>
+</div>
+
+@code {
+    bool _menuOpen;
+    void ToggleMenu() => _menuOpen = !_menuOpen;
+}
