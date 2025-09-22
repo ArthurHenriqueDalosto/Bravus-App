@@ -10,5 +10,6 @@ namespace BravusApp.Shared.RequestModels
     {
         public int id {  get; set; }
         public string newPswd { get; set; }
+        public bool isReset { get; set; }
     }
 }

@@ -12,6 +12,7 @@ namespace BravusApp.Server.Services
     {
         Task<RequestResponse<bool>> AddOperator(AddOperatorRequest model);
         Task<RequestResponse<bool>> ChangePassword(ChangePasswordRequest model);
+        Task<RequestResponse<bool>> ChangeStatus(int id);
         Task<RequestResponse<List<OperatorsResponse>>> GetOperators();
     }
 
@@ -61,18 +62,24 @@ namespace BravusApp.Server.Services
         {
             try
             {
-                if (String.IsNullOrEmpty(model.newPswd))
-                    return RequestResponse<bool>.Fail("Preencha a nova senha!");
-
                 var user = _context.Operators.Where(x => x.Id == model.id).FirstOrDefault();
 
                 if (user == null)
-                    return RequestResponse<bool>.Fail("Usuárioo não encontrado");
+                    return RequestResponse<bool>.Fail("Usuário não encontrado");
 
-                user.Password = BCrypt.Net.BCrypt.HashPassword(model.newPswd);
-                _context.SaveChanges();
+                if (model.isReset)
+                {
+                    user.Password = BCrypt.Net.BCrypt.HashPassword("123");
+                    user.PswdChanged = false;
+                }
+                else
+                {
+                    if (String.IsNullOrEmpty(model.newPswd))
+                        return RequestResponse<bool>.Fail("Preencha a nova senha!");
 
-                user.PswdChanged = true;
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(model.newPswd);
+                    user.PswdChanged = true;
+                }
                 _context.SaveChanges();
 
                 return RequestResponse<bool>.Ok(true);
@@ -81,6 +88,26 @@ namespace BravusApp.Server.Services
             catch (Exception ex)
             {
                 return RequestResponse<bool>.Fail("Erro ao atualizar senha");
+            }
+        }
+
+        public async Task<RequestResponse<bool>> ChangeStatus(int id)
+        {
+            try
+            {
+                var model = _context.Operators.Where(x => x.Id == id).FirstOrDefault();
+                if (model != null)
+                {
+                    model.IsActive = !model.IsActive;
+                    _context.SaveChanges();
+                    return RequestResponse<bool>.Ok(true);
+                }
+                else
+                    return RequestResponse<bool>.Fail("Usuário não encontrado");
+            }
+            catch (Exception ex)
+            {
+                return RequestResponse<bool>.Fail("Erro Atualizar status");
             }
         }
 

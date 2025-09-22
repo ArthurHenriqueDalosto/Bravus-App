@@ -1,7 +1,13 @@
 ﻿@inject NavigationManager _nav
 @inject AuthenticationStateProvider _auth
 @page "/"
+@using BravusApp.Client.Model
+@using BravusApp.Client.Services
+@using BravusApp.Shared.RequestModels
 @using Microsoft.AspNetCore.Components.Authorization
+@inject IHttpService _api
+@inject IAuthService _authApp
+@inject SnackbarService _snackbar
 
 <div class="content">
     <div class="cards">
@@ -36,12 +42,55 @@
             </div>
         </div>
     </div>
+
+    @if (ShowChangePasswordModal)
+    {
+        <div class="modal-backdrop" @onclick="CloseChangePasswordModal"></div>
+
+        <div class="modal-container">
+            <div class="modal-card" @onclick:stopPropagation>
+                <div class="modal-header">
+                    <h3>Troca de Senha Obrigatória</h3>
+                    <button class="modal-close" @onclick="CloseChangePasswordModal">×</button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Sua senha precisa ser alterada antes de continuar utilizando o sistema.</p>
+
+                    <div class="field">
+                        <label class="label" for="novaSenha">Nova Senha</label>
+                        <input id="novaSenha" type="password" class="input-custom" placeholder="Digite a nova senha" @bind="NovaSenha" />
+                    </div>
+
+                    <div class="field" style="margin-top: 1rem;">
+                        <label class="label" for="confirmarSenha">Confirmar Senha</label>
+                        <input id="confirmarSenha" type="password" class="input-custom" placeholder="Confirme a nova senha" @bind="ConfirmarSenha" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(MensagemErro))
+                    {
+                        <div class="error-text">@MensagemErro</div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-cancel" @onclick="CloseChangePasswordModal">Fechar</button>
+                    <button class="btn-confirm" @onclick="ChangePassword">Trocar Senha</button>
+                </div>
+            </div>
+        </div>
+    }
+
 </div>
 
 
 @code {
     public string navDuties { get; set; } = "/duties";
     public string navAddDuties { get; set; } = "/add-duties";
+    private bool ShowChangePasswordModal = false;
+    private string NovaSenha = string.Empty;
+    private string ConfirmarSenha = string.Empty;
+    private string MensagemErro = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -60,5 +109,86 @@
         {
             Console.WriteLine(ex.Message);
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var authState = await _auth.GetAuthenticationStateAsync();
+                var user = authState.User;
+
+                Console.WriteLine(user.FindFirst("001").Value);
+
+                if (user.FindFirst("001")?.Value == "False")
+                {
+                    Console.WriteLine("aq");
+                    ShowChangePasswordModal = true;
+                    StateHasChanged();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+
+
+    private async Task ChangePassword()
+    {
+        try
+        {
+            var authState = await _auth.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            MensagemErro = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(NovaSenha) || string.IsNullOrWhiteSpace(ConfirmarSenha))
+                await _snackbar.Show("Preencha todos os campos!", SnackbarType.Error);
+            else
+            {
+                if (NovaSenha != ConfirmarSenha)
+                {
+                    await _snackbar.Show("As senhas não coincidem!", SnackbarType.Error);
+
+                }
+                else
+                {
+                    var payload = new ChangePasswordRequest
+                    {
+                        id = int.Parse(user.FindFirst("id").Value),
+                        newPswd = NovaSenha,
+                        isReset = false
+                    };
+
+                    var response = await _api.PostAsync<ChangePasswordRequest, bool>("api/operators/change-pswd", payload);
+
+                    if (response.Success)
+                    {
+                        await _snackbar.Show("Senha alterada com sucesso, realize login novamente.", SnackbarType.Success);
+                       
+                        CloseChangePasswordModal();
+                        await _authApp.LogoutAsync();
+                        _nav.NavigateTo("/login");
+                    }
+                    else
+                        await _snackbar.Show("Erro ao alterar senha", SnackbarType.Error);
+
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            await _snackbar.Show("Erro ao Alterar Senha.", SnackbarType.Error);
+        }
+    }
+
+    private void CloseChangePasswordModal()
+    {
+        ShowChangePasswordModal = false;
     }
 }

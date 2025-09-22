@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using MudBlazor
 @inject IAuthService Auth
-@inject NavigationManager Nav
+@inject NavigationManager _nav
 @inject IJSRuntime JS
 @attribute [AllowAnonymous]
 @inject Services.SnackbarService _snackbar
@@ -28,14 +28,13 @@
         </button>
 
         <div class="row">
-            <a class="link" @onclick="@(() => {_snackbar.Show("Entre em contato com Arthur e Solicite o reset de senha!", SnackbarType.Info);})">Esqueci a senha</a>
+            <a class="link" @onclick="@(() => {_snackbar.Show("Entre em contato com o BV Arthur e Solicite o reset de senha!", SnackbarType.Info);})">Esqueci a senha</a>
         </div>
     </div>
 </div>
 
 @code {
     public LoginRequest model { get; set; } = new();
-    [Inject] private NavigationManager Navigation { get; set; }
     public bool _loading { get; set; } = false;
     public bool _showPwd { get; set; } = false;
     public bool selected { get; set; } = false;
@@ -48,11 +47,11 @@
             var response = await Auth.LoginAsync(model);
             if (response.Data != null)
             {
-                Navigation.NavigateTo("/");
+                _nav.NavigateTo("/");
             }
             else
             {
-                await _snackbar.Show("CPF ou Senha Incorreta!", SnackbarType.Error);
+                await _snackbar.Show(response.Message, SnackbarType.Error);
             }
         }
         catch (Exception ex)

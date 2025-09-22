@@ -29,8 +29,11 @@ namespace BravusApp.Server.Services
             var op = await _context.Operators.FirstOrDefaultAsync(x => x.Cpf == cpf);
 
             if (op == null || !BCrypt.Net.BCrypt.Verify(password, op.Password))
-                return RequestResponse<string>.Fail("CPF ou senha inválidos");
-            
+                return RequestResponse<string>.Fail("CPF ou senha incorreta");
+
+            if (!op.IsActive)
+                return RequestResponse<string>.Fail("Usuário desativado pelo administrador!");
+
             var token = GenerateJwtToken(op);
             if (String.IsNullOrEmpty(token))
                 return RequestResponse<string>.Fail("Erro ao Gerar Token");
@@ -48,10 +51,12 @@ namespace BravusApp.Server.Services
                 {
                     new Claim("id", op.Id.ToString()),
                     new Claim(ClaimTypes.Name, op.Name),
-            }),
+                    new Claim("001", op.PswdChanged.ToString()),
+                }),
+               
                 Expires = DateTime.UtcNow.AddHours(8),
                 SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();

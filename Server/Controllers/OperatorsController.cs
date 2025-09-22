@@ -44,5 +44,12 @@ namespace BravusApp.Server.Controllers
             var response = await _operatorService.ChangePassword(model);
             return response;
         }
+
+        [HttpPost("change-status")]
+        public async Task<RequestResponse<bool>> AddOperator(int id)
+        {
+            var response = await _operatorService.ChangeStatus(id);
+            return response;
+        }
     }
 }

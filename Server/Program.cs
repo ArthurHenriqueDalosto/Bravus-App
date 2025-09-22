@@ -21,36 +21,35 @@ builder.Services.AddScoped<IDutiesService, DutiesService>();
 
 
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen(opt =>
-//{
-//    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Bravus API", Version = "v1" });
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Bravus API", Version = "v1" });
 
-//    // Configuração de autenticação JWT
-//    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-//    {
-//        Name = "Authorization",
-//        Type = SecuritySchemeType.Http,
-//        Scheme = "Bearer",
-//        BearerFormat = "JWT",
-//        In = ParameterLocation.Header,
-//        Description = "Insira o token JWT no campo abaixo.\nExemplo: Bearer xxxxx.yyyyy.zzzzz"
-//    });
+    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira o token JWT no campo abaixo.\nExemplo: Bearer xxxxx.yyyyy.zzzzz"
+    });
 
-//    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
-//    {
-//        {
-//            new OpenApiSecurityScheme
-//            {
-//                Reference = new OpenApiReference
-//                {
-//                    Type = ReferenceType.SecurityScheme,
-//                    Id = "Bearer"
-//                }
-//            },
-//            Array.Empty<string>()
-//        }
-//    });
-//});
+    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtKey"] ?? "super_secret_key_bravus_2025");
 
@@ -77,27 +76,24 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 var app = builder.Build();
-//app.UseSwagger();
-//app.UseSwaggerUI(c =>
-//{
-//    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Bravus API v1");
-//    c.RoutePrefix = string.Empty; // Para abrir em https://localhost:5001/
-//});
+app.UseSwagger();
+
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Bravus API v1"); // caminho absoluto
+    c.RoutePrefix = "admin"; 
+});
 
 
-
-
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseWebAssemblyDebugging();
-//}
-//else
-//{
-//    app.UseExceptionHandler("/Error");
-//    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-//    app.UseHsts();
-//}
+if (app.Environment.IsDevelopment())
+{
+    app.UseWebAssemblyDebugging();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
 
 app.UseWebAssemblyDebugging();
 
