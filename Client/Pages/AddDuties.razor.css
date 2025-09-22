@@ -121,11 +121,11 @@
   background-color: #374151;
 }
 .add-duties .calendar .calendar-grid .calendar-day button.day-available {
-  /*background-color: #04785720;*/
+  background-color: rgba(4, 120, 87, 0.125);
   color: #1ef326;
 }
 .add-duties .calendar .calendar-grid .calendar-day button.day-available:hover {
-  background-color: rgba(4, 120, 87, 0.2509803922);
+  background-color: rgba(4, 120, 87, 0.25);
 }
 .add-duties .calendar .calendar-grid .calendar-day button.day-partial {
   background-color: rgba(250, 204, 21, 0.0823529412);
@@ -135,12 +135,11 @@
   background-color: rgba(250, 204, 21, 0.2078431373);
 }
 .add-duties .calendar .calendar-grid .calendar-day button.day-full {
-  background-color: rgba(107, 114, 128, 0.2509803922);
+  background-color: rgba(107, 114, 128, 0.25);
   color: #9ca3af;
-  cursor: not-allowed;
 }
 .add-duties .calendar .calendar-grid .calendar-day .selected-day {
-  border: 1px solid rgba(120, 87, 32, 0.016);
+  border: 1px solid rgba(255, 9, 9, 0.59);
 }
 .add-duties .calendar .calendar-grid .calendar-day.today button {
   border: 1px solid #3b82f6;

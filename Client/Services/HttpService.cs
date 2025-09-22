@@ -1,4 +1,5 @@
 ﻿using BravusApp.Shared.ResponseModels;
+using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -16,10 +17,12 @@ namespace BravusApp.Client.Services
     public class HttpService : IHttpService
     {
         static readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
-
+        private readonly NavigationManager _nav;
         private readonly HttpClient http;
-        public HttpService(HttpClient http)
+
+        public HttpService(NavigationManager nav, HttpClient http)
         {
+            _nav = nav;
             this.http = http;
         }
 
@@ -52,8 +55,14 @@ namespace BravusApp.Client.Services
             await EnsureSuccessOrThrow(resp, ct);
         }
 
-        static async Task<RequestResponse<T>> HandleResponse<T>(HttpResponseMessage resp, CancellationToken ct)
+        private async Task<RequestResponse<T>> HandleResponse<T>(HttpResponseMessage resp, CancellationToken ct)
         {
+            if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+               _nav.NavigateTo("/login", true); 
+                throw new UnauthorizedAccessException("Usuário não autorizado.");
+            }
+
             var payload = await resp.Content.ReadFromJsonAsync<RequestResponse<T>>(_json, ct)
                           ?? throw new ApiException("Resposta vazia ou inválida do servidor.");
 
@@ -68,7 +77,7 @@ namespace BravusApp.Client.Services
             return payload;
         }
 
-        static async Task EnsureSuccessOrThrow(HttpResponseMessage resp, CancellationToken ct)
+        private async Task EnsureSuccessOrThrow(HttpResponseMessage resp, CancellationToken ct)
         {
             if (resp.IsSuccessStatusCode) return;
 

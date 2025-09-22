@@ -71,8 +71,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+var dbPath = Path.Combine(AppContext.BaseDirectory, "plantao.db");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=plantao.db"));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 
 var app = builder.Build();
@@ -94,9 +96,6 @@ else
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-
-app.UseWebAssemblyDebugging();
-
 
 
 app.UseHttpsRedirection();

@@ -3,6 +3,7 @@ using BravusApp.Server.Services;
 using BravusApp.Shared.Models;
 using BravusApp.Shared.RequestModels;
 using BravusApp.Shared.ResponseModels;
+using DocumentFormat.OpenXml.Office2016.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ namespace BravusApp.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DutiesController : ControllerBase
     {
         private readonly IDutiesService _dutiesService;
@@ -25,9 +27,9 @@ namespace BravusApp.Server.Controllers
         }
 
         [HttpGet("get")]
-        public async Task<RequestResponse<List<DutiesResponse>>> GetDuties([FromQuery] int month)
+        public async Task<RequestResponse<List<DutiesResponse>>> GetDuties([FromQuery] int month, [FromQuery] int year)
         {
-            var response = await _dutiesService.GetDuties(month);
+            var response = await _dutiesService.GetDuties(month, year);
             return response;
         }
 
@@ -36,6 +38,14 @@ namespace BravusApp.Server.Controllers
         {
             var response = await _dutiesService.AddDuty(request);
             return response;
+        }
+
+        [HttpGet("export")]
+        public async Task<IActionResult> Export([FromQuery] int year, [FromQuery] int month, CancellationToken ct)
+        {
+            var bytes = await _dutiesService.ExportAsync(year, month, ct);
+            var fileName = $"Escala_{year:D4}_{month:D2}.xlsx";
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
     }
 }

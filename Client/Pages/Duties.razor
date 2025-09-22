@@ -197,7 +197,7 @@
     {
         try
         {
-            var response = await Api.GetResponseAsync<List<DutiesResponse>>($"api/duties/get?month={Month}");
+            var response = await Api.GetResponseAsync<List<DutiesResponse>>($"api/duties/get?month={Month}&year={Year}");
             if (response.Success)
             {
                 _map = response.Data.Where(d => d.Date.Year == Year && d.Date.Month == Month).ToDictionary(k => (k.OperatorId, k.Date), v => v.DutyType);

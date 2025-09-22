@@ -15,6 +15,7 @@ namespace BravusApp.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class OperatorsController : ControllerBase
     {
         private readonly IOperatorService _operatorService;

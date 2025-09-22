@@ -18,9 +18,6 @@ namespace BravusApp.Server.Data
                 .HasIndex(o => o.Cpf)
                 .IsUnique();
 
-            modelBuilder.Entity<Duty>()
-                .HasIndex(d => new { d.OperatorId, d.Date })
-                .IsUnique(); // Um operador só pode ter 1 plantão por dia
 
             modelBuilder.Entity<Duty>()
                 .HasOne(d => d.Operator)

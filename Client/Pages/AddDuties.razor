@@ -15,13 +15,11 @@
 
     <div class="calendar">
         <div class="calendar-header">
-            <button @onclick="PreviousMonthAsync" disabled="@IsFirstMonth">&#x276E;</button>
-
+            <div/>
             <div class="month-display">
                 @Culture.TextInfo.ToTitleCase(Culture.DateTimeFormat.GetMonthName(Month))
             </div>
-
-            <button @onclick="NextMonthAsync" disabled="@IsLastMonth">&#x276F;</button>
+            <div />
         </div>
         <div class="calendar-legend">
             <div class="legend-box">
@@ -51,12 +49,11 @@
 
             @foreach (var day in CalendarDays)
             {
-                <div class="calendar-day @(day.IsCurrentMonth ? "" : "outside-month") @(day.IsToday ? "today" : "")">
+                <div class="calendar-day @(day.IsCurrentMonth ? "" : "outside-month")">
                     @if (day.DayNumber > 0)
                     {
                         string statusClass = day.IsFull ? "day-full" : day.CountDuties > 0 ? "day-partial" : "day-available";
                         <button class="@($"{statusClass} {(SelectedDay == day.DayNumber ? "selected-day" : "")}")"
-                                disabled="@day.IsFull"
                                 @onclick="@(() => SelectDay(day.DayNumber))"
                                 title="@GetTooltip(day)">
                             @day.DayNumber
@@ -145,22 +142,20 @@
 
     private readonly string[] WeekDays = ["DOM.", "SEG.", "TER.", "QUA.", "QUI.", "SEX.", "SÁB."];
 
-    private readonly DateTime Today = DateTime.Today.AddDays(3);
-    private readonly int CurrentMonth = DateTime.Today.AddDays(3).Month;
-    private readonly int CurrentYear = DateTime.Today.AddDays(3).Year;
+    private readonly DateTime Today = DateTime.Today;
+    private static readonly DateTime NextMonthRef =
+    new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(1);
 
-    private int Month { get; set; } = DateTime.Today.AddDays(3).Month;
-    private int Year { get; set; } = DateTime.Today.AddDays(3).Year;
+    private readonly int CurrentMonth = NextMonthRef.Month;
+    private readonly int CurrentYear = NextMonthRef.Year;
+
+    private int Month { get; set; } = NextMonthRef.Month;
+    private int Year { get; set; } = NextMonthRef.Year;
 
     private int? SelectedDay = null;
     private bool ShowConfirmModal = false;
     private DutyType? PendingDutyType = null;
     private int? OperatorId;
-
-    private bool IsFirstMonth => Month == CurrentMonth && Year == CurrentYear;
-    private bool IsLastMonth =>
-        (CurrentMonth == 12 && Month == 1 && Year == CurrentYear + 1) ||
-        (Month == CurrentMonth + 1 && Year == CurrentYear);
 
     private string SelectedDateLabel =>
     SelectedDay is null ? string.Empty : $"{SelectedDay:00}/{Month:00}";
@@ -176,7 +171,7 @@
             _nav.NavigateTo("/login");
         }
         await RefreshMonthAsync();
-        var claim = user.FindFirst("id"); 
+        var claim = user.FindFirst("id");
 
         if (int.TryParse(claim?.Value, out var id))
             OperatorId = id;
@@ -184,17 +179,17 @@
 
     private async Task RefreshMonthAsync()
     {
-        await GetDuties(Month);
+        await GetDuties(Month, Year);
         GenerateCalendar();
         ApplyDutiesToCalendar();
         StateHasChanged();
     }
 
-    public async Task GetDuties(int month)
+    public async Task GetDuties(int month, int year)
     {
         try
         {
-            var response = await Api.GetResponseAsync<List<DutiesResponse>>($"api/duties/get?month={month}");
+            var response = await Api.GetResponseAsync<List<DutiesResponse>>($"api/duties/get?month={month}&year={year}");
             DutiesData = response.Success ? response.Data : new();
         }
         catch (Exception ex)
@@ -202,7 +197,7 @@
             Console.WriteLine("Erro ao buscar plantões: " + ex.Message);
         }
     }
-   
+
     private async Task ConfirmSelectionAsync()
     {
         if (SelectedDay is null || PendingDutyType is null) return;
@@ -222,7 +217,7 @@
 
             if (response.Success && response.Data)
             {
-                await GetDuties(Month);
+                await GetDuties(Month, Year);
                 GenerateCalendar();
                 ApplyDutiesToCalendar();
                 SelectDay(SelectedDay.Value);
@@ -242,36 +237,6 @@
             Console.WriteLine(ex.Message);
             CloseConfirmModal();
         }
-    }
-
-    private async Task PreviousMonthAsync()
-    {
-        if (IsFirstMonth) return;
-
-        if (Month == 1)
-        {
-            Month = 12;
-            Year--;
-        }
-        else
-            Month--;
-
-        await RefreshMonthAsync();
-    }
-
-    private async Task NextMonthAsync()
-    {
-        if (IsLastMonth) return;
-
-        if (Month == 12)
-        {
-            Month = 1;
-            Year++;
-        }
-        else
-            Month++;
-
-        await RefreshMonthAsync();
     }
 
     public bool IsUnavailableByConflict(DutyType currentType)
@@ -315,7 +280,7 @@
 
         return "Disponível para plantão.";
     }
-   
+
     private void SelectDay(int dayNumber)
     {
         SelectedDay = dayNumber;
@@ -324,8 +289,10 @@
         SelectedDuties = DutiesData
             .Where(d => d.Date == selectedDate)
             .ToList();
+
+        StateHasChanged();
     }
-   
+
     private void GenerateCalendar()
     {
         CalendarDays.Clear();
@@ -355,7 +322,6 @@
                 Year = Year,
                 Month = Month,
                 IsCurrentMonth = true,
-                IsToday = current.Date == Today.Date
             });
         }
 
@@ -409,7 +375,7 @@
         PendingDutyType = type;
         ShowConfirmModal = true;
     }
-   
+
     private void CloseConfirmModal()
     {
         ShowConfirmModal = false;

@@ -135,11 +135,11 @@
                     }
 
                     &.day-available {
-                        /*background-color: #04785720;*/
+                        background-color: rgba(4, 120, 87, 0.125);
                         color: #1ef326;
 
                         &:hover {
-                            background-color: #04785740;
+                            background-color: rgba(4, 120, 87, 0.25);
                         }
                     }
 
@@ -153,14 +153,13 @@
                     }
 
                     &.day-full {
-                        background-color: #6b728040;
+                        background-color: rgba(107, 114, 128, 0.25);
                         color: #9ca3af;
-                        cursor: not-allowed;
                     }
                 }
 
                 .selected-day {
-                    border: 1px solid rgba(120, 87, 32, 0.016);
+                    border: 1px solid rgb(255 9 9 / 59%);
                 }
 
                 &.today button {
