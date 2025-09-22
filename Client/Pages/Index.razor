@@ -1,9 +1,64 @@
-﻿@page "/"
+﻿@inject NavigationManager _nav
+@inject AuthenticationStateProvider _auth
+@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
 
-<PageTitle>Index</PageTitle>
+<div class="content">
+    <div class="cards">
+        <div class="card-custom" @onclick="(() => _nav.NavigateTo(navAddDuties))">
+            <div class="text">
+                <div class="name">AGENDAR PLANTÃO</div>
+                <span>Escolha os dias desejados</span>
+            </div>
+            <div class="bar" />
+            <div class="button">
+                <img src="/avancar.png">
+            </div>
+        </div>
+        <div class="card-custom" @onclick="(() => _nav.NavigateTo(navDuties))">
+            <div class="text">
+                <div class="name">VISUALIZAR ESCALA</div>
+                <span>Visualize a escala bimestral</span>
+            </div>
+            <div class="bar" />
+            <div class="button">
+                <img src="/avancar.png">
+            </div>
+        </div>
+        <div class="card-custom">
+            <div class="text">
+                <div class="name">SOLICITAR ALTERAÇÃO</div>
+                <span>Solicite Alteração e aguarde aprovação (EM DESENVOLVIMENTO)</span>
+            </div>
+            <div class="bar" />
+            <div class="button">
+                <img src="/avancar.png">
+            </div>
+        </div>
+    </div>
+</div>
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
+@code {
+    public string navDuties { get; set; } = "/duties";
+    public string navAddDuties { get; set; } = "/add-duties";
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await _auth.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? false)
+            {
+                _nav.NavigateTo("/login");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+}

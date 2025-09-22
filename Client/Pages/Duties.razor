@@ -1,0 +1,220 @@
+﻿@page "/duties"
+@using System.Globalization
+@using BravusApp.Client.Model
+@using BravusApp.Client.Services
+@using BravusApp.Shared.Enums
+@using BravusApp.Shared.ResponseModels
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager _nav
+@inject AuthenticationStateProvider _auth
+@inject SnackbarService _snackbar
+@inject IHttpService Api
+@inject IJSRuntime JS
+@{
+    var pt = new CultureInfo("pt-BR");
+}
+
+<div class="escala-mensal">
+    <div class="calendar-header">
+        <button @onclick="PreviousMonthAsync" disabled="@IsFirstMonth">&#x276E;</button>
+
+        <div class="month-display">
+            @pt.TextInfo.ToTitleCase(pt.DateTimeFormat.GetMonthName(Month)) de @Year
+        </div>
+
+        <button @onclick="NextMonthAsync" disabled="@IsLastMonth">&#x276F;</button>
+    </div>
+
+
+    <div class="tabela-scroll-wrapper">
+        @if (Operators.Count > 0)
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-nome sticky-col corner-sticky">VOLUNTÁRIO</th>
+                        @for (int d = 1; d <= DiasNoMes; d++)
+                        {
+                            var data = new DateOnly(Year, Month, d);
+                            <th class="dia @(IsWeekend(data) ? "wknd" : "") @(data == Hoje ? "today" : "")">
+                                <div class="dn">@d</div>
+                                <div class="dow">@data.ToString("ddd", pt).ToUpper()</div>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var op in OrdenedOperators)
+                    {
+                        <tr>
+                            <td class="col-nome sticky-col">@op.Name</td>
+                            @for (int d = 1; d <= DiasNoMes; d++)
+                            {
+                                var data = new DateOnly(Year, Month, d);
+                                var duty = GetDuty(op.Id, data);
+                                <td class="cell @duty.GetCssClass() @(IsWeekend(data) ? "wknd" : "")"
+                                    title="@duty.GetHint()">
+                                    @duty.GetSigla()
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+    <div class="rotate-hint" role="status" aria-live="polite">
+        <span class="icon" aria-hidden="true">📱</span>
+        <span class="text">Para melhor experiência, use no modo horizontal.</span>
+    </div>
+</div>
+
+@code {
+    CultureInfo pt = new("pt-BR");
+    [Parameter] public int Year { get; set; } = 2025;
+    [Parameter] public int Month { get; set; } = DateTime.Today.Month;
+
+    Dictionary<(int, DateOnly), DutyType> _map = new();
+    List<OperatorsResponse> Operators = new();
+
+    int CurrentMonth => DateTime.Today.Month;
+    int CurrentYear => DateTime.Today.Year;
+
+    bool IsFirstMonth => Month == CurrentMonth && Year == CurrentYear;
+    bool IsLastMonth => (Month == CurrentMonth + 1 && Year == CurrentYear) || (Month == 1 && Year > CurrentYear);
+
+    DateOnly Hoje = DateOnly.FromDateTime(DateTime.Today);
+    int DiasNoMes => DateTime.DaysInMonth(Year, Month);
+
+
+    IEnumerable<OperatorsResponse> OrdenedOperators =>
+    Operators.OrderBy(o => o.Name, StringComparer.Create(pt, ignoreCase: true));
+
+    DutyType GetDuty(int opId, DateOnly dia) => _map.TryGetValue((opId, dia), out var t) ? t : DutyType.None;
+
+    static bool IsWeekend(DateOnly d) => d.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await GetOperators();
+                await GetDuties();
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);      
+            }
+        }
+    }
+
+    protected override async void OnParametersSet()
+    {
+        await VerifyAuth();
+
+        if (Year <= 0) Year = DateTime.Today.Year;
+        if (Month <= 0 || Month > 12) Month = DateTime.Today.Month;
+    }
+
+    public async Task VerifyAuth()
+    {
+        try
+        {
+            var authState = await _auth.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? false)
+            {
+                _nav.NavigateTo("/login");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    async Task PreviousMonthAsync()
+    {
+        if (!IsFirstMonth)
+        {
+            if (Month == 1)
+            {
+                Month = 12;
+                Year--;
+            }
+            else
+            {
+                Month--;
+            }
+
+            await GetDuties();
+        }
+    }
+
+    async Task NextMonthAsync()
+    {
+        if (!IsLastMonth)
+        {
+            if (Month == 12)
+            {
+                Month = 1;
+                Year++;
+            }
+            else
+            {
+                Month++;
+            }
+
+            await GetDuties();
+        }
+    }
+
+    public async Task GetOperators()
+    {
+        try
+        {
+            var response = await Api.GetResponseAsync<List<OperatorsResponse>>("api/operators/get");
+
+            if (response.Success)
+                Operators = response.Data;
+            else
+                await _snackbar.Show("Erro ao buscar operadores", SnackbarType.Error);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Erro inesperado: " + ex.Message);
+        }
+    }
+
+    public async Task GetDuties()
+    {
+        try
+        {
+            var response = await Api.GetResponseAsync<List<DutiesResponse>>($"api/duties/get?month={Month}");
+            if (response.Success)
+            {
+                _map = response.Data.Where(d => d.Date.Year == Year && d.Date.Month == Month).ToDictionary(k => (k.OperatorId, k.Date), v => v.DutyType);
+            }
+            else
+            {
+                Console.WriteLine("Erro ao buscar plantões");
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Erro inesperado: " + ex.Message);
+        }
+    }
+
+    
+
+
+}

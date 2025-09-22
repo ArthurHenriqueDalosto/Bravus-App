@@ -10,23 +10,85 @@
     <link href="css/app.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="BravusApp.Client.styles.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.webmanifest">
+
+    <meta name="theme-color" content="#000000" />
+
 </head>
 
+
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+    <div class="app" id="app">
+        <div class="loading-screen">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Carregando Bravus...</p>
+        </div>
+
+        <style>
+            .loading-screen {
+                position: fixed;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle at top left, #a71818 5%, #0f0f0f 100%);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                font-family: 'Segoe UI', sans-serif;
+            }
+
+            .loading-spinner {
+                width: 80px;
+                height: 80px;
+                border: 6px solid rgba(255, 255, 255, 0.08);
+                border-top: 6px solid #ff3030; /* vermelho em destaque */
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+            .loading-text {
+                margin-top: 20px;
+                color: #f1f5f9;
+                font-size: 1.1rem;
+                font-weight: 600;
+                letter-spacing: 1px;
+                text-shadow: 0 0 6px rgba(0,0,0,0.8);
+                animation: blink 1.5s infinite;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            @keyframes blink {
+                50% {
+                    opacity: 0.5;
+                }
+            }
+        </style>
     </div>
 
     <div id="blazor-error-ui">
-        An unhandled error has occurred.
+        Ocorreu um erro inesperado.
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="js/orientation-lock.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.published.js')
+                .then(() => console.log("Service Worker registrado"))
+                .catch(err => console.error("Erro ao registrar Service Worker", err));
+        }
+    </script>
 </body>
 
 </html>

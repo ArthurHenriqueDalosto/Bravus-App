@@ -1,0 +1,55 @@
+.nav-bar-custom {
+    display: flex;
+    height: 40px;
+    width: 100%;
+    /* background: linear-gradient(to right, #1c1c1c, #2d0b0b);*/
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /*background: linear-gradient(to bottom, #1a0000, #0f0f0f), url('/noise.png');*/
+    background: #1e1e1e;
+    background-blend-mode: overlay;
+
+    .container-nav {
+        justify-content: space-between;
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+
+        div {
+            width: 33.3%;
+        }
+
+        .brand {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 33.3%;
+            text-align: center;
+            color: #ff0000;
+            letter-spacing: 2px;
+            font-family: "Black Ops One", system-ui;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 32px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .nav-bar-custom {
+            box-shadow: 0 2px 12px rgba(255, 0, 0, 0.3) !important;
+        }
+
+        .brand {
+            color: #ff0000 !important;
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.7) !important;
+        }
+    }
+
+    @media screen and (-webkit-min-device-pixel-ratio:0) {
+        .nav-bar-custom {
+            backdrop-filter: none !important;
+            background: #1e1e1e !important;
+        }
+    }
+}

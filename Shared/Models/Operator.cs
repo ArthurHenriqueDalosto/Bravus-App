@@ -19,6 +19,7 @@ namespace BravusApp.Shared.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsActive { get; set; } = true;
+        public bool PswdChanged { get; set; } = false;
 
         public List<Duty> Duties { get; set; } = new();
     }

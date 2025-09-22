@@ -2,5 +2,29 @@
   {
     "outputFile": "Pages/Login.razor.css",
     "inputFile": "Pages/Login.razor.scss"
+  },
+  {
+    "inputFile": "Shared/MainLayout.razor.scss",
+    "outputFile": "Shared/MainLayout.razor.css"
+  },
+  {
+    "inputFile": "Pages/Index.razor.scss",
+    "outputFile": "Pages/Index.razor.css"
+  },
+  {
+    "inputFile": "Shared/NavMenu.razor.scss",
+    "outputFile": "Shared/NavMenu.razor.css"
+  },
+  {
+    "inputFile": "Pages/Duties.razor.scss",
+    "outputFile": "Pages/Duties.razor.css"
+  },
+  {
+    "inputFile": "Pages/AddDuties.razor.scss",
+    "outputFile": "Pages/AddDuties.razor.css"
+  },
+  {
+    "inputFile": "Shared/Snackbar.razor.scss",
+    "outputFile": "Shared/Snackbar.razor.css"
   }
 ]

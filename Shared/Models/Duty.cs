@@ -14,7 +14,7 @@ namespace BravusApp.Shared.Models
 
         public DateTime Date { get; set; }
 
-        public string DutyType { get; set; } = string.Empty; // Ex: SV, SVD, SVN, TD
+        public int DutyType { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

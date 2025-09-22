@@ -1,0 +1,30 @@
+﻿@using BravusApp.Client.Model
+@inject Services.SnackbarService SnackbarService
+
+@if (Visible)
+{
+    <div class="snackbar @Current.Type.ToString().ToLower()">
+        <span>@Current.Message</span>
+    </div>
+}
+
+@code {
+    private SnackbarMessage Current { get; set; } = new SnackbarMessage();
+    private bool Visible { get; set; }
+
+    protected override void OnInitialized()
+    {
+        SnackbarService.OnShow += ShowMessage;
+    }
+
+    private async Task ShowMessage(SnackbarMessage msg)
+    {
+        Current = msg;
+        Visible = true;
+        StateHasChanged();
+
+        await Task.Delay(msg.Duration);
+        Visible = false;
+        StateHasChanged();
+    }
+}

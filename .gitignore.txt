@@ -1,0 +1,27 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.db
+*.vspscc
+*.vssscc
+*.vsscc
+
+# Rider
+.idea/
+*.sln.iml
+
+# Outros arquivos temporários
+*.log
+*.vsix
+*.vscode/

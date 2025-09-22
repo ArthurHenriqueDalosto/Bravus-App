@@ -1,77 +1,84 @@
 ﻿@page "/login"
+@using BravusApp.Client.Model
 @using BravusApp.Client.Services
+@using BravusApp.Shared.RequestModels
 @using Microsoft.AspNetCore.Authorization
+@using MudBlazor
 @inject IAuthService Auth
 @inject NavigationManager Nav
 @inject IJSRuntime JS
 @attribute [AllowAnonymous]
+@inject Services.SnackbarService _snackbar
 
 <div class="brv-auth">
-    <div class="brand">BRAVUS</div>
-
-    <EditForm Model="_model" OnValidSubmit="HandleLogin" class="card">
-        <DataAnnotationsValidator />
-        @if (!string.IsNullOrWhiteSpace(_error))
-        {
-            <div class="alert">@_error</div>
-        }
-
+    <div class="content">
+        <div class="brand">BRAVUS</div>
         <div class="field">
-            <label for="email">E-mail</label>
-            <InputText id="email" @bind-Value="_model.Email" inputmode="email" autocomplete="email" />
-            <ValidationMessage For="@(() => _model.Email)" />
+            <label class="label">CPF:</label>
+            <input class="input-custom" value="@FormatarCpf(model.Cpf)" @oninput="HandleCpfInput" placeholder="Digite seu CPF" />
         </div>
-
         <div class="field">
-            <label for="password">Senha</label>
-            <div class="password">
-                <InputText id="password" type="@(_showPwd ? "text" : "password")"
-                           @bind-Value="_model.Password" autocomplete="current-password" />
-                <button type="button" class="toggle" @onclick="() => _showPwd = !_showPwd">
-                    @_showPwd ? "Ocultar" : "Mostrar"
-                </button>
+            <label class="label">Senha:</label>
+            <div class="field pswd">
+                <input type="password" class="input-custom pswd" placeholder="Digite sua Senha " @bind="model.Password" autocomplete="current-password" />
             </div>
-            <ValidationMessage For="@(() => _model.Password)" />
         </div>
-
-        <div class="row">
-            <label class="check">
-                <InputCheckbox @bind-Value="_model.Remember" />
-                <span>Lembrar de mim</span>
-            </label>
-            <a class="link" href="/forgot">Esqueci a senha</a>
-        </div>
-
-        <button class="primary" disabled="@_loading" type="submit">
+        <button class="primary" disabled="@(string.IsNullOrWhiteSpace(model.Cpf) || string.IsNullOrWhiteSpace(model.Password))" @onclick="(() => LoginAction())">
             @(_loading ? "Entrando..." : "Entrar")
         </button>
-    </EditForm>
 
-    <div class="footer">© @DateTime.UtcNow.Year Bravus</div>
+        <div class="row">
+            <a class="link" @onclick="@(() => {_snackbar.Show("Entre em contato com Arthur e Solicite o reset de senha!", SnackbarType.Info);})">Esqueci a senha</a>
+        </div>
+    </div>
 </div>
 
 @code {
-    readonly LoginVM _model = new();
-    bool _showPwd;
-    bool _loading;
+    public LoginRequest model { get; set; } = new();
+    [Inject] private NavigationManager Navigation { get; set; }
+    public bool _loading { get; set; } = false;
+    public bool _showPwd { get; set; } = false;
+    public bool selected { get; set; } = false;
     string? _error;
 
-    async Task HandleLogin()
+    public async Task LoginAction()
     {
-        _loading = true;
-        _error = null;
-        var ok = await Auth.LoginAsync(_model.Email, _model.Password, _model.Remember);
-        _loading = false;
-        if (ok) Nav.NavigateTo("/");
-        else _error = "Credenciais inválidas.";
+        try
+        {
+            var response = await Auth.LoginAsync(model);
+            if (response.Data != null)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                await _snackbar.Show("CPF ou Senha Incorreta!", SnackbarType.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Erro inesperado: " + ex.Message);
+        }
     }
 
-    sealed class LoginVM
+    private void HandleCpfInput(ChangeEventArgs e)
     {
-        [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.EmailAddress]
-        public string Email { get; set; } = "";
-        [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.MinLength(6)]
-        public string Password { get; set; } = "";
-        public bool Remember { get; set; } = true;
+        var input = e.Value?.ToString() ?? "";
+        model.Cpf = new string(input.Where(char.IsDigit).ToArray());
+    }
+
+    private string FormatarCpf(string? cpf)
+    {
+        var digits = new string(cpf?.Where(char.IsDigit).ToArray() ?? []);
+        if (digits.Length <= 3)
+            return digits;
+        if (digits.Length <= 6)
+            return $"{digits[..3]}.{digits[3..]}";
+        if (digits.Length <= 9)
+            return $"{digits[..3]}.{digits[3..6]}.{digits[6..]}";
+        if (digits.Length <= 11)
+            return $"{digits[..3]}.{digits[3..6]}.{digits[6..9]}-{digits[9..]}";
+
+        return $"{digits[..3]}.{digits[3..6]}.{digits[6..9]}-{digits[9..11]}";
     }
 }

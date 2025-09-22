@@ -1,0 +1,391 @@
+.add-duties {
+    background: radial-gradient(circle at top left, #a71818 5%, #0f0f0f 100%);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+
+    .calendar {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 1.5rem;
+        border-radius: 12px;
+        font-family: 'Segoe UI', sans-serif;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        color: #f1f5f9;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+
+            button {
+                background-color: transparent;
+                border: none;
+                font-size: 1.5rem;
+                cursor: pointer;
+                color: #f9fafb;
+                transition: color 0.2s ease;
+
+                &:hover:not(:disabled) {
+                    color: #3b82f6;
+                }
+
+                &:disabled {
+                    color: #6b7280;
+                    cursor: not-allowed;
+                }
+            }
+
+            .month-display {
+                font-size: 15px;
+                font-weight: 600;
+                color: #f9fafb;
+                background: transparent;
+                padding: 0.4rem 1rem;
+                border-radius: 8px;
+                border: 1px solid #9d0000;
+                box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+                text-transform: capitalize;
+            }
+        }
+
+        .calendar-legend {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+
+            .legend-box {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+
+                .day {
+                    margin-left: 3px;
+                    font-size: 12px;
+                }
+
+                .box-avaiable {
+                    background-color: rgba(4, 120, 87, 0.125);
+                    height: 15px;
+                    width: 15px;
+                    border-radius: 3px;
+                    border: 1px solid #1ef326
+                }
+
+                .box-partial {
+                    background-color: #facc1515;
+                    height: 15px;
+                    width: 15px;
+                    border-radius: 3px;
+                    border: 1px solid #ffcc00
+                }
+
+                .box-unavai {
+                    background-color: rgba(107, 114, 128, 0.251);
+                    height: 15px;
+                    width: 15px;
+                    border-radius: 3px;
+                    border: 1px solid #9ca3af
+                }
+            }
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.35rem;
+
+            .calendar-day-name {
+                text-align: center;
+                font-weight: 600;
+                font-size: 0.85rem;
+                color: #9ca3af;
+            }
+
+            .calendar-day {
+                aspect-ratio: 1 / 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                &.outside-month {
+                    opacity: 0.2;
+                }
+
+                button {
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                    border-radius: 50%;
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: 0.2s ease;
+                    background-color: transparent;
+
+                    &:hover:not(:disabled) {
+                        transform: scale(1.05);
+                        background-color: #374151;
+                    }
+
+                    &.day-available {
+                        /*background-color: #04785720;*/
+                        color: #1ef326;
+
+                        &:hover {
+                            background-color: #04785740;
+                        }
+                    }
+
+                    &.day-partial {
+                        background-color: #facc1515;
+                        color: #ffcc00;
+
+                        &:hover {
+                            background-color: #facc1535;
+                        }
+                    }
+
+                    &.day-full {
+                        background-color: #6b728040;
+                        color: #9ca3af;
+                        cursor: not-allowed;
+                    }
+                }
+
+                .selected-day {
+                    border: 1px solid rgba(120, 87, 32, 0.016);
+                }
+
+                &.today button {
+                    border: 1px solid #3b82f6;
+                }
+            }
+        }
+    }
+
+
+    .duties-panel {
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-top: 1rem;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+
+        .duties-title {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .duties-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+
+            .duty-card {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem 1rem;
+                border-radius: 8px;
+                border: 1px solid #32b518;
+
+                &.duty-card-blocked {
+                    border-color: #ff3030 !important;
+                    opacity: 0.7;
+                }
+
+                .duty-info {
+                    display: flex;
+                    flex-direction: column;
+
+                    .duty-type {
+                        font-weight: 600;
+                        font-size: 0.95rem;
+                        color: #f1f5f9;
+                    }
+
+                    .duty-taken {
+                        color: #ff3030;
+                        font-weight: 600;
+                        font-size: 12px;
+                    }
+
+                    .duty-free {
+                        color: #32b518;
+                        font-weight: 500;
+                        font-size: 12px;
+                    }
+                }
+
+                .duty-taken-by {
+                    color: #ff3030;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                }
+
+                .duty-btn {
+                    background-color: #32b518;
+                    color: white;
+                    padding: 6px 12px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: background-color 0.2s ease;
+
+                    &:hover {
+                        background-color: #1d4ed8;
+                    }
+
+                    &:active {
+                        background-color: #1e40af;
+                    }
+                }
+            }
+        }
+    }
+
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+        backdrop-filter: blur(2px);
+    }
+
+    .modal-container {
+        position: fixed;
+        inset: 0;
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .modal-card {
+        background-color: #1e1e1e;
+        color: #f1f5f9;
+        border: 1px solid #2c2c2c;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 360px;
+        animation: modalFadeIn 0.2s ease-out;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: radial-gradient(circle at top right, #a71818 5%, #0f0f0f 100%);
+        border-bottom: 1px solid #2c2c2c;
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 1.25rem;
+            cursor: pointer;
+
+            &:hover {
+                color: #ef4444;
+            }
+        }
+    }
+
+    .modal-body {
+        padding: 1.25rem;
+        font-size: 0.95rem;
+        text-align: center;
+
+        .highlight-duty {
+            color: #ff0000;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 16px;
+        }
+
+        .highlight-date {
+            color: #ff0000;
+            font-weight: 600;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 4px;
+        }
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-top: 1px solid #2c2c2c;
+
+        .btn-cancel,
+        .btn-confirm {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-cancel {
+            background-color: #374151;
+            color: #f1f5f9;
+
+            &:hover {
+                background-color: #4b5563;
+            }
+        }
+
+        .btn-confirm {
+            background-color: #22811f;
+            color: #fff;
+
+            &:hover {
+                background-color: #16a34a;
+            }
+        }
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+}

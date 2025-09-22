@@ -1,0 +1,419 @@
+﻿@page "/add-duties"
+@using System.Globalization
+@using BravusApp.Client.Model
+@using BravusApp.Client.Services
+@using BravusApp.Shared.Enums
+@using BravusApp.Shared.RequestModels
+@using BravusApp.Shared.ResponseModels
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IHttpService Api
+@inject AuthenticationStateProvider _auth
+@inject NavigationManager _nav
+@inject Services.SnackbarService _snackbar
+
+<div class="add-duties">
+
+    <div class="calendar">
+        <div class="calendar-header">
+            <button @onclick="PreviousMonthAsync" disabled="@IsFirstMonth">&#x276E;</button>
+
+            <div class="month-display">
+                @Culture.TextInfo.ToTitleCase(Culture.DateTimeFormat.GetMonthName(Month))
+            </div>
+
+            <button @onclick="NextMonthAsync" disabled="@IsLastMonth">&#x276F;</button>
+        </div>
+        <div class="calendar-legend">
+            <div class="legend-box">
+                <div class="box-avaiable" />
+                <span class="day">
+                    Disponível
+                </span>
+            </div>
+            <div class="legend-box">
+                <div class="box-partial" />
+                <span class="day">
+                    Parcialmente Dispon.
+                </span>
+            </div>
+            <div class="legend-box">
+                <div class="box-unavai" />
+                <span class="day">
+                    Indisponível
+                </span>
+            </div>
+        </div>
+        <div class="calendar-grid">
+            @foreach (var dayName in WeekDays)
+            {
+                <div class="calendar-day-name">@dayName</div>
+            }
+
+            @foreach (var day in CalendarDays)
+            {
+                <div class="calendar-day @(day.IsCurrentMonth ? "" : "outside-month") @(day.IsToday ? "today" : "")">
+                    @if (day.DayNumber > 0)
+                    {
+                        string statusClass = day.IsFull ? "day-full" : day.CountDuties > 0 ? "day-partial" : "day-available";
+                        <button class="@($"{statusClass} {(SelectedDay == day.DayNumber ? "selected-day" : "")}")"
+                                disabled="@day.IsFull"
+                                @onclick="@(() => SelectDay(day.DayNumber))"
+                                title="@GetTooltip(day)">
+                            @day.DayNumber
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (SelectedDay.HasValue)
+    {
+        var selectedDate = new DateOnly(Year, Month, SelectedDay.Value);
+        <div class="duties-panel">
+            <h4 class="duties-title">Turnos no dia @SelectedDateLabel</h4>
+            <div class="duties-list">
+                @foreach (DutyType type in Enum.GetValues(typeof(DutyType)).Cast<DutyType>().Where(t => t != DutyType.None))
+                {
+                    var duty = SelectedDuties.FirstOrDefault(d => d.DutyType == type);
+                    bool isBlocked = IsUnavailableByConflict(type);
+
+                    <div class="duty-card @((duty is not null || isBlocked) ? "duty-card-blocked" : "")">
+                        <div class="duty-info">
+                            <span class="duty-type">@GetDutyLabel(type)</span>
+
+                            @if (duty is not null)
+                            {
+                                <span class="duty-taken">Indisponível</span>
+                            }
+                            else if (isBlocked)
+                            {
+                                <span class="duty-taken">Indisponível por conflito</span>
+                            }
+                            else
+                            {
+                                <span class="duty-free">Disponível</span>
+                            }
+                        </div>
+
+                        @if (duty is null && !isBlocked)
+                        {
+                            <button class="duty-btn" @onclick="() => OpenConfirmModal(type)">
+                                Selecionar
+                            </button>
+                        }
+                        else if (duty is not null)
+                        {
+                            <span class="duty-taken-by">@duty.OperatorName</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    @if (ShowConfirmModal && PendingDutyType is not null)
+    {
+        <div class="modal-backdrop" @onclick="CloseConfirmModal"></div>
+
+        <div class="modal-container">
+            <div class="modal-card" @onclick:stopPropagation>
+                <div class="modal-header">
+                    <h3>Confirmar Agendamento?</h3>
+                    <button class="modal-close" @onclick="CloseConfirmModal">×</button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Deseja Confirmar
+                        <strong class="highlight-duty">@GetDutyLabel(PendingDutyType.Value)</strong><br />
+                        no dia <strong class="highlight-date">@SelectedDateLabel?</strong>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" @onclick="CloseConfirmModal">Cancelar</button>
+                    <button class="btn-confirm" @onclick="ConfirmSelectionAsync">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+@code {
+    private CultureInfo Culture = new("pt-BR");
+
+    private List<DutiesResponse> SelectedDuties = new();
+    private List<DutiesResponse> DutiesData = new();
+    private List<DayInfo> CalendarDays = new();
+
+    private readonly string[] WeekDays = ["DOM.", "SEG.", "TER.", "QUA.", "QUI.", "SEX.", "SÁB."];
+
+    private readonly DateTime Today = DateTime.Today.AddDays(3);
+    private readonly int CurrentMonth = DateTime.Today.AddDays(3).Month;
+    private readonly int CurrentYear = DateTime.Today.AddDays(3).Year;
+
+    private int Month { get; set; } = DateTime.Today.AddDays(3).Month;
+    private int Year { get; set; } = DateTime.Today.AddDays(3).Year;
+
+    private int? SelectedDay = null;
+    private bool ShowConfirmModal = false;
+    private DutyType? PendingDutyType = null;
+    private int? OperatorId;
+
+    private bool IsFirstMonth => Month == CurrentMonth && Year == CurrentYear;
+    private bool IsLastMonth =>
+        (CurrentMonth == 12 && Month == 1 && Year == CurrentYear + 1) ||
+        (Month == CurrentMonth + 1 && Year == CurrentYear);
+
+    private string SelectedDateLabel =>
+    SelectedDay is null ? string.Empty : $"{SelectedDay:00}/{Month:00}";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _auth.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity?.IsAuthenticated ?? false)
+        {
+            _nav.NavigateTo("/login");
+        }
+        await RefreshMonthAsync();
+        var claim = user.FindFirst("id"); 
+
+        if (int.TryParse(claim?.Value, out var id))
+            OperatorId = id;
+    }
+
+    private async Task RefreshMonthAsync()
+    {
+        await GetDuties(Month);
+        GenerateCalendar();
+        ApplyDutiesToCalendar();
+        StateHasChanged();
+    }
+
+    public async Task GetDuties(int month)
+    {
+        try
+        {
+            var response = await Api.GetResponseAsync<List<DutiesResponse>>($"api/duties/get?month={month}");
+            DutiesData = response.Success ? response.Data : new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Erro ao buscar plantões: " + ex.Message);
+        }
+    }
+   
+    private async Task ConfirmSelectionAsync()
+    {
+        if (SelectedDay is null || PendingDutyType is null) return;
+
+        var selectedDate = new DateOnly(Year, Month, SelectedDay.Value);
+
+        var payload = new AddDutyRequest
+        {
+            Date = selectedDate,
+            DutyType = PendingDutyType.Value,
+            OperatorId = OperatorId.Value,
+        };
+
+        try
+        {
+            var response = await Api.PostAsync<AddDutyRequest, bool>("api/duties/add", payload);
+
+            if (response.Success && response.Data)
+            {
+                await GetDuties(Month);
+                GenerateCalendar();
+                ApplyDutiesToCalendar();
+                SelectDay(SelectedDay.Value);
+                CloseConfirmModal();
+                StateHasChanged();
+
+                await _snackbar.Show("Plantão agendado com sucesso!", SnackbarType.Success);
+            }
+            else
+            {
+                CloseConfirmModal();
+                await _snackbar.Show("Erro ao agendar Plantão", SnackbarType.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            CloseConfirmModal();
+        }
+    }
+
+    private async Task PreviousMonthAsync()
+    {
+        if (IsFirstMonth) return;
+
+        if (Month == 1)
+        {
+            Month = 12;
+            Year--;
+        }
+        else
+            Month--;
+
+        await RefreshMonthAsync();
+    }
+
+    private async Task NextMonthAsync()
+    {
+        if (IsLastMonth) return;
+
+        if (Month == 12)
+        {
+            Month = 1;
+            Year++;
+        }
+        else
+            Month++;
+
+        await RefreshMonthAsync();
+    }
+
+    public bool IsUnavailableByConflict(DutyType currentType)
+    {
+        bool hasSV24 = SelectedDuties.Any(d => d.DutyType == DutyType.SV24);
+        bool hasSVD = SelectedDuties.Any(d => d.DutyType == DutyType.SVD);
+        bool hasSVT = SelectedDuties.Any(d => d.DutyType == DutyType.TD);
+        bool hasSVN = SelectedDuties.Any(d => d.DutyType == DutyType.SVN);
+
+        if (currentType == DutyType.SV24)
+            return hasSVT || hasSVN || hasSVD;
+
+        if (currentType == DutyType.TD)
+            return hasSV24 || hasSVD;
+
+        if (currentType == DutyType.SVD || currentType == DutyType.SVN)
+            return hasSV24;
+
+        return false;
+    }
+
+    private string GetDutyLabel(DutyType type) => type switch
+    {
+        DutyType.SV24 => "SV 24H",
+        DutyType.SVD => "SV Diurno",
+        DutyType.SVN => "SV Noturno",
+        DutyType.TD => "SV Tarde",
+        _ => type.ToString()
+    };
+
+    private string GetTooltip(DayInfo day)
+    {
+        if (day.HasSV)
+            return "Indisponível: plantão 24h (SV24) agendado.";
+
+        if (day.IsFull && day.CountDuties > 0)
+            return "Indisponível: conflito entre SVD e SVN no mesmo dia.";
+
+        if (day.CountDuties > 0)
+            return $"Parcialmente ocupado ({day.CountDuties} plantão(ões)).";
+
+        return "Disponível para plantão.";
+    }
+   
+    private void SelectDay(int dayNumber)
+    {
+        SelectedDay = dayNumber;
+
+        var selectedDate = new DateOnly(Year, Month, dayNumber);
+        SelectedDuties = DutiesData
+            .Where(d => d.Date == selectedDate)
+            .ToList();
+    }
+   
+    private void GenerateCalendar()
+    {
+        CalendarDays.Clear();
+
+        var firstDay = new DateTime(Year, Month, 1);
+        var daysInMonth = DateTime.DaysInMonth(Year, Month);
+        int dayOfWeek = (int)firstDay.DayOfWeek;
+
+        for (int i = 0; i < dayOfWeek; i++)
+        {
+            CalendarDays.Add(new DayInfo
+            {
+                DayNumber = 0,
+                Year = Year,
+                Month = Month,
+                IsCurrentMonth = false
+            });
+        }
+
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            var current = new DateTime(Year, Month, day);
+
+            CalendarDays.Add(new DayInfo
+            {
+                DayNumber = day,
+                Year = Year,
+                Month = Month,
+                IsCurrentMonth = true,
+                IsToday = current.Date == Today.Date
+            });
+        }
+
+        while (CalendarDays.Count % 7 != 0)
+        {
+            CalendarDays.Add(new DayInfo
+            {
+                DayNumber = 0,
+                Year = Year,
+                Month = Month,
+                IsCurrentMonth = false
+            });
+        }
+    }
+
+    private void ApplyDutiesToCalendar()
+    {
+        foreach (var day in CalendarDays.Where(d => d.Date.HasValue))
+        {
+            var dutiesOfDay = DutiesData
+                .Where(d => d.Date == day.Date.Value)
+                .ToList();
+
+            var types = dutiesOfDay.Select(d => d.DutyType).Distinct().ToList();
+
+            bool hasSV24 = types.Contains(DutyType.SV24);
+            bool hasSVD = types.Contains(DutyType.SVD);
+            bool hasSVN = types.Contains(DutyType.SVN);
+            bool hasTD = types.Contains(DutyType.TD);
+
+            day.CountDuties = dutiesOfDay.Count;
+            day.HasSV = hasSV24;
+
+            if (hasSV24 || (hasSVD && hasSVN))
+            {
+                day.IsFull = true;
+            }
+            else if (hasSVD || hasSVN || hasTD)
+            {
+                day.IsFull = false;
+            }
+            else
+            {
+                day.IsFull = false;
+            }
+        }
+    }
+
+    private void OpenConfirmModal(DutyType type)
+    {
+        PendingDutyType = type;
+        ShowConfirmModal = true;
+    }
+   
+    private void CloseConfirmModal()
+    {
+        ShowConfirmModal = false;
+        PendingDutyType = null;
+    }
+
+}

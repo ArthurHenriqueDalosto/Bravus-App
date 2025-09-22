@@ -2,38 +2,81 @@
 @model BravusApp.Server.Pages.ErrorModel
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Error</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Erro no sistema</title>
     <link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet" />
     <link href="~/css/app.css" rel="stylesheet" asp-append-version="true" />
+    <style>
+        body {
+            background: radial-gradient(circle at top left, #7b1b1b, #0f0f0f);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .error-container {
+            background-color: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 0, 0, 0.35);
+            border-radius: 12px;
+            padding: 2rem 2.5rem;
+            max-width: 600px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        .error-title {
+            font-size: 2.5rem;
+            color: #e53935;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-subtitle {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        code {
+            background: #1e1e1e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        .dev-info {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .dev-info strong {
+            color: #f87171;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="main">
-        <div class="content px-4">
-            <h1 class="text-danger">Error.</h1>
-            <h2 class="text-danger">An error occurred while processing your request.</h2>
+    <div class="error-container">
+        <div class="error-title">Erro inesperado</div>
+        <div class="error-subtitle">Algo deu errado ao processar sua solicitação.</div>
 
-            @if (Model.ShowRequestId)
-            {
-                <p>
-                    <strong>Request ID:</strong> <code>@Model.RequestId</code>
-                </p>
-            }
+        @if (Model.ShowRequestId)
+        {
+            <p><strong>ID da Requisição:</strong> <code>@Model.RequestId</code></p>
+        }
 
-            <h3>Development Mode</h3>
+        <div class="dev-info">
+            <h5>Ambiente de Desenvolvimento</h5>
             <p>
-                Swapping to the <strong>Development</strong> environment displays detailed information about the error that occurred.
-            </p>
-            <p>
-                <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-                It can result in displaying sensitive information from exceptions to end users.
-                For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-                and restarting the app.
+                Ative o ambiente <strong>Development</strong> para ver detalhes do erro.<br />
+                Defina a variável <strong>ASPNETCORE_ENVIRONMENT</strong> como <code>Development</code> e reinicie o app.
             </p>
         </div>
     </div>

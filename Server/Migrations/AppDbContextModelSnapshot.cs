@@ -29,9 +29,8 @@ namespace BravusApp.Server.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("DutyType")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("DutyType")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("OperatorId")
                         .HasColumnType("INTEGER");
@@ -67,6 +66,9 @@ namespace BravusApp.Server.Migrations
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("PswdChanged")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

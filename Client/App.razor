@@ -1,25 +1,26 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 
 <CascadingAuthenticationState>
-  <Router AppAssembly="@typeof(App).Assembly" PreferExactMatches="@true">
-    <Found Context="routeData">
-      <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-        <NotAuthorized>
-        </NotAuthorized>
-        <Authorizing>
-          <div class="route-loading">Carregando…</div>
-        </Authorizing>
-      </AuthorizeRouteView>
-    </Found>
+    <Snackbar />
+    <Router AppAssembly="@typeof(App).Assembly" PreferExactMatches="@true">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                </NotAuthorized>
+                <Authorizing>
+                    <div class="route-loading">Carregando…</div>
+                </Authorizing>
+            </AuthorizeRouteView>
+        </Found>
 
-    <NotFound>
-      <LayoutView Layout="@typeof(MainLayout)">
-        <div class="route-notfound">
-          <h3>Página não encontrada</h3>
-          <p>Verifique a URL ou volte ao início.</p>
-          <a href="/" class="btn-link">Ir para Home</a>
-        </div>
-      </LayoutView>
-    </NotFound>
-  </Router>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="route-notfound">
+                    <h3>Página não encontrada</h3>
+                    <p>Verifique a URL ou volte ao início.</p>
+                    <a href="/" class="btn-link">Ir para Home</a>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
 </CascadingAuthenticationState>

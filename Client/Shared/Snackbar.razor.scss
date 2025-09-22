@@ -1,0 +1,54 @@
+.snackbar {
+    position: absolute;
+    right: 15px;
+    top: 20px;
+    /*transform: translateX(-50%);*/
+    min-width: 240px;
+    max-width: 90%;
+    padding: .75rem 1rem;
+    border-radius: .5rem;
+    color: #fff;
+    font-size: .95rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+    z-index: 10000;
+    text-align: center;
+  /*  animation: slide-in .3s ease-out, fade-out .5s ease-in forwards;
+    animation-delay: 0s, 3.5s; // controla tempo do fade-out*/
+}
+
+// Tipos
+.snackbar.success {
+    background: #16a34a;
+}
+// verde
+.snackbar.error {
+    background: #dc2626;
+}
+// vermelho
+.snackbar.warning {
+    background: #f59e0b;
+}
+// amarelo
+.snackbar.info {
+    background: #2563eb;
+}
+// azul
+
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes fade-out {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}

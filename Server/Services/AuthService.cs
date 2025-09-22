@@ -30,7 +30,6 @@ namespace BravusApp.Server.Services
 
             if (op == null || !BCrypt.Net.BCrypt.Verify(password, op.Password))
                 return RequestResponse<string>.Fail("CPF ou senha inválidos");
-
             
             var token = GenerateJwtToken(op);
             if (String.IsNullOrEmpty(token))
@@ -47,9 +46,8 @@ namespace BravusApp.Server.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                new Claim(ClaimTypes.NameIdentifier, op.Id.ToString()),
-                new Claim(ClaimTypes.Name, op.Name),
-                new Claim("cpf", op.Cpf)
+                    new Claim("id", op.Id.ToString()),
+                    new Claim(ClaimTypes.Name, op.Name),
             }),
                 Expires = DateTime.UtcNow.AddHours(8),
                 SigningCredentials = new SigningCredentials(
